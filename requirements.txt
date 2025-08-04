@@ -1,0 +1,13 @@
+streamlit
+langchain
+faiss-cpu
+sentence-transformers
+PyPDF2
+pymupdf
+langchain-community
+langchain-huggingface
+pypdf
+ollama
+sentence-transformers
+fuzzywuzzy[speedup]
+llama-index

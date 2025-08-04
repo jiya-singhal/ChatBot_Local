@@ -2,6 +2,8 @@
 import streamlit as st
 from rag_chat import load_vectorstore_from_file, get_llm_response, load_vectorstore_from_text
 from utils import save_uploaded_file
+import os
+port = int(os.environ.get("PORT", 8501))
 
 st.set_page_config(page_title="IIT Roorkee Chatbot", layout="wide")
 st.title("🤖 Chatbot")

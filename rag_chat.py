@@ -46,29 +46,21 @@ def fuzzy_filter(query, docs, threshold=70):
     return [doc for doc in docs if fuzz.partial_ratio(query.lower(), doc.page_content.lower()) > threshold]
 
 def get_llm_response(query, vectorstore=None, system_prompt="You are a helpful assistant."):
+    from langchain_community.chat_models import ChatOllama
+    from langchain_core.messages import SystemMessage, HumanMessage
+
+    model = ChatOllama(model="llama3", temperature=0.4)
+
+    context = ""
     if vectorstore:
-        retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
-        docs = retriever.get_relevant_documents(query)
-        filtered_docs = fuzzy_filter(query, docs)
+        docs = vectorstore.similarity_search(query, k=3)
+        context = "\n".join(doc.page_content for doc in docs)
 
-        if filtered_docs:
-            filtered_vectorstore = FAISS.from_documents(filtered_docs, embedding_model)
-            retriever = filtered_vectorstore.as_retriever()
-            qa = RetrievalQA.from_chain_type(llm=llm, retriever=retriever, chain_type_kwargs={
-                "prompt": {
-                    "input_variables": ["context", "question"],
-                    "template": (
-                        system_prompt + "\n\n"
-                        "Context:\n{context}\n\n"
-                        "Question: {question}\nAnswer:"
-                    )
-                }
-            })
-            return qa.run(query)
-        else:
-            return llm.invoke(system_prompt + "\n\nUser: " + query)
-    else:
-        return llm.invoke(system_prompt + "\n\nUser: " + query)
+    messages = [
+        SystemMessage(content=system_prompt + "\nUse the following context to help answer:\n" + context),
+        HumanMessage(content=query)
+    ]
 
-
+    response = model.invoke(messages)
+    return response.content
 
